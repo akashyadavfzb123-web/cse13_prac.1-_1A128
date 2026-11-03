@@ -1,0 +1,20 @@
+### GET all books
+GET http://localhost:4000/books
+
+### GET book by id
+GET http://localhost:4000/books/1
+
+### POST add book
+POST http://localhost:4000/books
+Content-Type: application/json
+
+{ "id": 4, "title": "Clean Code", "author": "Robert C. Martin", "price": 550, "category": "Programming" }
+
+### PUT update book
+PUT http://localhost:4000/books/1
+Content-Type: application/json
+
+{ "title": "The Alchemist (Updated)", "price": 399 }
+
+### DELETE book
+DELETE http://localhost:4000/books/1

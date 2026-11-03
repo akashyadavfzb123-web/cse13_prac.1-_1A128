@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library Book Management</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; overflow-x: hidden; font-family: 'Segoe UI', Arial, sans-serif; color: #e2e8f0;
+           background: linear-gradient(-45deg, #0f172a, #1e1b4b, #4f46e5, #7c3aed, #db2777); background-size: 500% 500%; animation: bg 16s ease infinite; }
+    @keyframes bg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .float { position: fixed; bottom: -60px; font-size: 2rem; opacity: .25; pointer-events: none; animation: up linear infinite; }
+    @keyframes up { to { transform: translateY(-115vh) rotate(360deg); } }
+    header { text-align: center; padding: 28px 16px 10px; }
+    header h1 { margin: 0; font-size: 2rem; }
+    nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+    nav button { padding: 10px 18px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; color: #fff; cursor: pointer; font-size: .95rem;
+                 background: rgba(255,255,255,.1); transition: .2s; }
+    nav button:hover { transform: translateY(-3px); background: rgba(255,255,255,.22); }
+    nav button.active { background: #fff; color: #4f46e5; font-weight: 700; }
+    main { position: relative; z-index: 2; max-width: 960px; margin: 22px auto; padding: 0 16px; }
+    section { display: none; animation: pop .6s cubic-bezier(.2,.9,.3,1.2) both; }
+    section.active { display: block; }
+    @keyframes pop { from { opacity: 0; transform: translateY(30px) scale(.97); } }
+    .card { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(12px);
+            border-radius: 18px; padding: 24px; margin-bottom: 22px; box-shadow: 0 15px 40px rgba(0,0,0,.35); }
+    h2 { margin-top: 0; color: #e9d5ff; }
+    .hero { text-align: center; padding: 50px 20px; }
+    .hero h2 { font-size: 2.2rem; color: #fff; }
+    .typing { display: inline-block; max-width: 100%; overflow: hidden; white-space: nowrap; border-right: 3px solid #fff;
+              animation: type 2.4s steps(26) both, blink .7s step-end infinite; }
+    @keyframes type { from { width: 0; } to { width: 100%; } }
+    @keyframes blink { 50% { border-color: transparent; } }
+    .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 22px; }
+    .stat { flex: 1; min-width: 140px; padding: 14px; border-radius: 14px; text-align: center; background: rgba(0,0,0,.2); }
+    .stat b { display: block; font-size: 1.7rem; color: #c4b5fd; }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 11px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.12); white-space: nowrap; }
+    th { color: #c7d2fe; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+    tbody tr { animation: slide .5s ease both; transition: .2s; }
+    tbody tr:hover { background: rgba(167,139,250,.22); }
+    @keyframes slide { from { opacity: 0; transform: translateX(-30px); } }
+    .price { color: #86efac; font-weight: 700; }
+    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 16px; }
+    input { padding: 12px; border: 1px solid rgba(255,255,255,.25); border-radius: 10px; font-size: 1rem; color: #fff;
+            background: rgba(255,255,255,.08); outline: none; transition: .2s; }
+    input::placeholder { color: #a5b4cc; }
+    input:focus { border-color: #c4b5fd; box-shadow: 0 0 0 3px rgba(196,181,253,.35); }
+    .btn { padding: 11px 16px; border: 0; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; transition: .2s;
+           background: linear-gradient(90deg, #6366f1, #d946ef); }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(217,70,239,.4); }
+    .btn.small { padding: 6px 12px; font-size: .85rem; margin-right: 4px; }
+    .btn.del { background: linear-gradient(90deg, #ef4444, #f97316); }
+    .btn.gray { background: #475569; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .8rem; background: rgba(255,255,255,.15); }
+    #toast { position: fixed; bottom: 22px; right: 22px; z-index: 10; padding: 14px 22px; border-radius: 12px; font-weight: 600; color: #fff;
+             transform: translateY(120px); opacity: 0; transition: .4s; }
+    #toast.show { transform: none; opacity: 1; }
+    #toast.ok { background: #16a34a; } #toast.err { background: #dc2626; }
+    footer { position: relative; z-index: 2; text-align: center; color: #cbd5e1; padding: 18px; font-size: .9rem; }
+    code { background: rgba(0,0,0,.3); padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📚 Library Book Management</h1>
+    <nav id="tabs">
+      <button data-tab="welcome" class="active">🏠 Welcome</button>
+      <button data-tab="http">🌐 HTTP Books (3000)</button>
+      <button data-tab="express">⚡ Express CRUD (4000)</button>
+      <button data-tab="about">ℹ️ About</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- WELCOME -->
+    <section id="welcome" class="active">
+      <div class="card hero">
+        <h2>📚 <span class="typing">Welcome to the Library</span></h2>
+        <p>Book Management System built with Node.js, HTTP, FS and Express.js</p>
+        <div class="stats">
+          <div class="stat"><b id="sCount">0</b>Books</div>
+          <div class="stat"><b id="sTotal">₹0</b>Total Value</div>
+          <div class="stat"><b id="sAvg">₹0</b>Average Price</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART A -->
+    <section id="http">
+      <div class="card">
+        <h2>Books from HTTP Server <span class="tag">GET /books</span></h2>
+        <div class="scroll"><table>
+          <thead><tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th></tr></thead>
+          <tbody id="httpRows"></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <h2>Add Book <span class="tag">POST /add-book</span></h2>
+        <form id="httpForm">
+          <input type="number" id="hId" placeholder="ID" required>
+          <input type="text" id="hTitle" placeholder="Title" required>
+          <input type="text" id="hAuthor" placeholder="Author" required>
+          <input type="number" id="hPrice" placeholder="Price" required>
+          <button class="btn" type="submit">➕ Add Book</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- PART B -->
+    <section id="express">
+      <div class="card">
+        <h2>Express REST API <span class="tag">GET /books</span></h2>
+        <div class="scroll"><table>
+          <thead><tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th><th>Category</th><th>Actions</th></tr></thead>
+          <tbody id="exRows"></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <h2 id="exFormTitle">Add Book <span class="tag">POST /books</span></h2>
+        <form id="exForm">
+          <input type="number" id="eId" placeholder="ID" required>
+          <input type="text" id="eTitle" placeholder="Title" required>
+          <input type="text" id="eAuthor" placeholder="Author" required>
+          <input type="number" id="ePrice" placeholder="Price" required>
+          <input type="text" id="eCategory" placeholder="Category" required>
+          <button class="btn" type="submit" id="exSubmit">➕ Add Book</button>
+          <button class="btn gray" type="button" id="exCancel" style="display:none">Cancel</button>
+        </form>
+        <p style="opacity:.75;margin-bottom:0">Needs <code>node expressApp.js</code> running on port 4000.</p>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="card">
+        <h2>About</h2>
+        <p>Library Book Management App built for the MT1 Lab Examination (Full Stack Development).</p>
+        <p>This page is served by the Node.js <code>http</code> server using the <code>fs</code> module. Books are kept in JavaScript arrays (no database).</p>
+        <p>Part A runs on port <code>3000</code> and Part B (Express.js) runs on port <code>4000</code>.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast"></div>
+  <footer>MT1 Lab Examination • Full Stack Development</footer>
+
+  <script>
+    const API = 'http://localhost:4000';
+    const $ = (id) => document.getElementById(id);
+    let editingId = null;
+
+    // floating books
+    for (let i = 0; i < 12; i++) {
+      const s = document.createElement('span');
+      s.className = 'float';
+      s.textContent = ['📚', '📖', '📕', '📗'][i % 4];
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.animationDuration = 9 + Math.random() * 10 + 's';
+      s.style.animationDelay = -Math.random() * 10 + 's';
+      document.body.appendChild(s);
+    }
+
+    // tabs
+    document.querySelectorAll('#tabs button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#tabs button, section').forEach((el) => el.classList.remove('active'));
+        btn.classList.add('active');
+        $(btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'express') loadExpress();
+      });
+    });
+
+    function toast(text, ok = true) {
+      const t = $('toast');
+      t.textContent = text;
+      t.className = 'show ' + (ok ? 'ok' : 'err');
+      setTimeout(() => (t.className = ''), 2800);
+    }
+
+    function countUp(el, target, prefix = '') {
+      let n = 0;
+      const step = Math.max(1, Math.ceil(target / 30));
+      const t = setInterval(() => {
+        n = Math.min(target, n + step);
+        el.textContent = prefix + n;
+        if (n >= target) clearInterval(t);
+      }, 25);
+    }
+
+    // ---------- Part A (port 3000, same origin) ----------
+    async function loadHttp() {
+      const books = await (await fetch('/books')).json();
+      $('httpRows').innerHTML = books.map((b, i) =>
+        `<tr style="animation-delay:${i * 0.07}s"><td>${b.id}</td><td>${b.title}</td><td>${b.author}</td><td class="price">₹${b.price}</td></tr>`
+      ).join('');
+      const total = books.reduce((s, b) => s + Number(b.price), 0);
+      countUp($('sCount'), books.length);
+      countUp($('sTotal'), total, '₹');
+      countUp($('sAvg'), books.length ? Math.round(total / books.length) : 0, '₹');
+    }
+
+    $('httpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const res = await fetch('/add-book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: Number($('hId').value), title: $('hTitle').value,
+          author: $('hAuthor').value, price: Number($('hPrice').value)
+        })
+      });
+      const data = await res.json();
+      toast(data.message || data.error, res.ok);
+      if (res.ok) { e.target.reset(); loadHttp(); }
+    });
+
+    // ---------- Part B (port 4000) ----------
+    async function loadExpress() {
+      try {
+        const books = await (await fetch(API + '/books')).json();
+        $('exRows').innerHTML = books.map((b, i) =>
+          `<tr style="animation-delay:${i * 0.07}s"><td>${b.id}</td><td>${b.title}</td><td>${b.author}</td>
+           <td class="price">₹${b.price}</td><td><span class="tag">${b.category}</span></td>
+           <td><button class="btn small" onclick="editBook(${b.id})">✏️ Edit</button>
+               <button class="btn small del" onclick="deleteBook(${b.id})">🗑️ Delete</button></td></tr>`
+        ).join('');
+      } catch {
+        $('exRows').innerHTML = '<tr><td colspan="6">Express server (port 4000) is not running.</td></tr>';
+        toast('Start expressApp.js on port 4000', false);
+      }
+    }
+
+    async function editBook(id) {
+      const b = await (await fetch(`${API}/books/${id}`)).json();
+      editingId = id;
+      $('eId').value = b.id; $('eId').disabled = true;
+      $('eTitle').value = b.title; $('eAuthor').value = b.author;
+      $('ePrice').value = b.price; $('eCategory').value = b.category;
+      $('exFormTitle').innerHTML = `Update Book <span class="tag">PUT /books/${id}</span>`;
+      $('exSubmit').textContent = '💾 Update Book';
+      $('exCancel').style.display = '';
+    }
+
+    function resetExForm() {
+      editingId = null;
+      $('exForm').reset();
+      $('eId').disabled = false;
+      $('exFormTitle').innerHTML = 'Add Book <span class="tag">POST /books</span>';
+      $('exSubmit').textContent = '➕ Add Book';
+      $('exCancel').style.display = 'none';
+    }
+    $('exCancel').addEventListener('click', resetExForm);
+
+    async function deleteBook(id) {
+      const res = await fetch(`${API}/books/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      toast(data.message || data.error, res.ok);
+      loadExpress();
+    }
+
+    $('exForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const book = {
+        id: Number($('eId').value), title: $('eTitle').value, author: $('eAuthor').value,
+        price: Number($('ePrice').value), category: $('eCategory').value
+      };
+      const url = editingId ? `${API}/books/${editingId}` : `${API}/books`;
+      const res = await fetch(url, {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(book)
+      });
+      const data = await res.json();
+      toast(data.message || data.error, res.ok);
+      if (res.ok) { resetExForm(); loadExpress(); }
+    });
+
+    loadHttp();
+  </script>
+</body>
+</html>
